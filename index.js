@@ -33,7 +33,7 @@ client.on('messageCreate', async (message) => {
         
         if (attachment.name.toLowerCase().endsWith('.pdf')) {
             try {
-                await message.reply('📄 PDFを画像に変換中...');
+                await message.react('⏳');
                 
                 const response = await fetch(attachment.url);
                 const buffer = await response.arrayBuffer();
@@ -60,21 +60,20 @@ client.on('messageCreate', async (message) => {
                 }
                 
                 if (images.length > 0) {
-                    await message.reply(`✅ PDFを${images.length}枚の画像に変換しました！`);
+                    await message.reactions.removeAll();
+                    await message.react('✅');
                     
                     const maxFilesPerMessage = 10;
                     for (let i = 0; i < images.length; i += maxFilesPerMessage) {
                         const batch = images.slice(i, i + maxFilesPerMessage);
-                        const pageStart = i + 1;
-                        const pageEnd = Math.min(i + maxFilesPerMessage, images.length);
                         
                         await message.channel.send({
-                            content: `📄 ページ ${pageStart}-${pageEnd}`,
                             files: batch.map(img => img.attachment)
                         });
                     }
                 } else {
-                    await message.reply('❌ 画像の変換に失敗しました。');
+                    await message.reactions.removeAll();
+                    await message.react('❌');
                 }
                 
                 fs.unlinkSync(pdfPath);
@@ -86,7 +85,8 @@ client.on('messageCreate', async (message) => {
                 
             } catch (error) {
                 console.error('PDF変換エラー:', error);
-                await message.reply('❌ PDF変換中にエラーが発生しました。');
+                await message.reactions.removeAll();
+                await message.react('❌');
             }
         }
     }
