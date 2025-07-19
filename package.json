@@ -1,0 +1,30 @@
+{
+  "name": "imgify-bot",
+  "version": "1.0.0",
+  "description": "Discord bot that converts PDF files to images",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "pdf",
+    "image",
+    "converter"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^17.2.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "pdf-to-img": "^4.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
