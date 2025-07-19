@@ -63,11 +63,18 @@ client.on('messageCreate', async (message) => {
                     await message.reactions.removeAll();
                     await message.react('✅');
                     
+                    // 新しいスレッドを作成
+                    const thread = await message.startThread({
+                        name: `PDF変換結果 - ${attachment.name}`,
+                        autoArchiveDuration: 60, // 1時間で自動アーカイブ
+                        reason: 'PDF画像変換結果'
+                    });
+                    
                     const maxFilesPerMessage = 10;
                     for (let i = 0; i < images.length; i += maxFilesPerMessage) {
                         const batch = images.slice(i, i + maxFilesPerMessage);
                         
-                        await message.channel.send({
+                        await thread.send({
                             files: batch.map(img => img.attachment)
                         });
                     }
