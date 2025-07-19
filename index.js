@@ -1,9 +1,13 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, AttachmentBuilder } from 'discord.js';
 import { pdf } from 'pdf-to-img';
+import libre from 'libreoffice-convert';
+import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+const convertAsync = promisify(libre.convert);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,16 +34,43 @@ client.on('messageCreate', async (message) => {
 
     if (message.attachments.size > 0) {
         const attachment = message.attachments.first();
+        const fileName = attachment.name.toLowerCase();
         
-        if (attachment.name.toLowerCase().endsWith('.pdf')) {
+        // サポートするファイル形式をチェック
+        const supportedFormats = ['.pdf', '.docx', '.doc', '.pptx', '.ppt'];
+        const isSupported = supportedFormats.some(format => fileName.endsWith(format));
+        
+        if (isSupported) {
             try {
                 await message.react('⏳');
                 
                 const response = await fetch(attachment.url);
                 const buffer = await response.arrayBuffer();
-                const pdfPath = path.join(tempDir, `temp_${Date.now()}.pdf`);
+                const originalExt = path.extname(attachment.name);
+                const tempFilePath = path.join(tempDir, `temp_${Date.now()}${originalExt}`);
                 
-                fs.writeFileSync(pdfPath, Buffer.from(buffer));
+                fs.writeFileSync(tempFilePath, Buffer.from(buffer));
+                
+                let pdfPath = tempFilePath;
+                
+                // PDF以外の場合は、まずPDFに変換
+                if (!fileName.endsWith('.pdf')) {
+                    try {
+                        const fileBuffer = fs.readFileSync(tempFilePath);
+                        const pdfBuffer = await convertAsync(fileBuffer, '.pdf', undefined);
+                        pdfPath = path.join(tempDir, `converted_${Date.now()}.pdf`);
+                        fs.writeFileSync(pdfPath, pdfBuffer);
+                        
+                        // 元のファイルを削除
+                        fs.unlinkSync(tempFilePath);
+                    } catch (convertError) {
+                        console.error('LibreOffice変換エラー:', convertError);
+                        await message.reactions.removeAll();
+                        await message.react('❌');
+                        fs.unlinkSync(tempFilePath);
+                        return;
+                    }
+                }
                 
                 const pdfDocument = await pdf(pdfPath, {
                     scale: 2.0
@@ -65,9 +96,9 @@ client.on('messageCreate', async (message) => {
                     
                     // 新しいスレッドを作成
                     const thread = await message.startThread({
-                        name: `PDF変換結果 - ${attachment.name}`,
+                        name: `変換結果 - ${attachment.name}`,
                         autoArchiveDuration: 60, // 1時間で自動アーカイブ
-                        reason: 'PDF画像変換結果'
+                        reason: 'ファイル画像変換結果'
                     });
                     
                     const maxFilesPerMessage = 10;
@@ -83,7 +114,10 @@ client.on('messageCreate', async (message) => {
                     await message.react('❌');
                 }
                 
-                fs.unlinkSync(pdfPath);
+                // 一時ファイルの削除
+                if (fs.existsSync(pdfPath)) {
+                    fs.unlinkSync(pdfPath);
+                }
                 images.forEach(img => {
                     if (fs.existsSync(img.path)) {
                         fs.unlinkSync(img.path);
@@ -91,7 +125,7 @@ client.on('messageCreate', async (message) => {
                 });
                 
             } catch (error) {
-                console.error('PDF変換エラー:', error);
+                console.error('ファイル変換エラー:', error);
                 await message.reactions.removeAll();
                 await message.react('❌');
             }
