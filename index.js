@@ -60,10 +60,19 @@ client.on('messageCreate', async (message) => {
                 }
                 
                 if (images.length > 0) {
-                    await message.reply({
-                        content: `✅ PDFを${images.length}枚の画像に変換しました！`,
-                        files: images.map(img => img.attachment)
-                    });
+                    await message.reply(`✅ PDFを${images.length}枚の画像に変換しました！`);
+                    
+                    const maxFilesPerMessage = 10;
+                    for (let i = 0; i < images.length; i += maxFilesPerMessage) {
+                        const batch = images.slice(i, i + maxFilesPerMessage);
+                        const pageStart = i + 1;
+                        const pageEnd = Math.min(i + maxFilesPerMessage, images.length);
+                        
+                        await message.channel.send({
+                            content: `📄 ページ ${pageStart}-${pageEnd}`,
+                            files: batch.map(img => img.attachment)
+                        });
+                    }
                 } else {
                     await message.reply('❌ 画像の変換に失敗しました。');
                 }
