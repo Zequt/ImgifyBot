@@ -1,11 +1,15 @@
 FROM node:20-bookworm
 
-# LibreOfficeと必要な依存関係をインストール
+# LibreOfficeと必要な依存関係、日本語フォントをインストール
 RUN apt-get update && apt-get install -y \
     libreoffice \
     libreoffice-writer \
     libreoffice-impress \
     fonts-liberation \
+    fonts-noto-cjk \
+    fonts-noto-cjk-extra \
+    fonts-ipafont \
+    fonts-ipaexfont \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
