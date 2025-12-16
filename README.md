@@ -12,13 +12,49 @@ PDF、Word、PowerPointファイルを画像に変換するDiscord Botです。
 
 ## セットアップ
 
-### 1. 依存関係のインストール
+### オプション1: Docker Compose（推奨）
+
+#### 1. 環境変数の設定
+
+`.env`ファイルを作成（`.env.example`をコピー）：
+
+```bash
+cp .env.example .env
+```
+
+`.env`ファイルに以下を設定：
+
+```
+DISCORD_TOKEN=your_bot_token_here
+```
+
+#### 2. Docker Composeで起動
+
+```bash
+docker compose up -d
+```
+
+#### 3. ログの確認
+
+```bash
+docker compose logs -f
+```
+
+#### 4. 停止
+
+```bash
+docker compose down
+```
+
+### オプション2: ローカル環境での実行
+
+#### 1. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-### 2. 環境変数の設定
+#### 2. 環境変数の設定
 
 `.env`ファイルを作成し、以下を設定：
 
@@ -26,7 +62,7 @@ npm install
 DISCORD_TOKEN=your_bot_token_here
 ```
 
-### 3. LibreOfficeのインストール
+#### 3. LibreOfficeのインストール
 
 Word・PowerPointファイルの変換にはLibreOfficeが必要です：
 
@@ -56,7 +92,11 @@ Discord Developer Portalでbotを作成する際、以下の権限を設定し�
 
 ## 使用方法
 
-### 起動
+### Docker Composeを使用する場合
+
+上記のセットアップセクションを参照してください。
+
+### ローカル環境で起動する場合
 
 ```bash
 npm start
